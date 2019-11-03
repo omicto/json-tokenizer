@@ -13,6 +13,7 @@ class LexerTest {
     void tokenize() {
         Lexer lex = new Lexer("{\"hola\": 1.235,\n" +
                 " \"mundo\":[1,2,3, \"hola\", false, true, null]}");
+//        Lexer lex = new Lexer("\"Hola]\"");
         List<Token> tokens = lex.tokenize();
         tokens.forEach(System.out::println);
     }

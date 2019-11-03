@@ -1,18 +1,22 @@
 package com.cjs.lexer;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class Lexer {
     private final String input;
     private final List<Token> tokens;
     private final List<Character> structural = Arrays.asList(Structural.CHARACTERS());
+    private final Map<String, Word> reserved;
     private int pos = 0;
 
     public Lexer(String input) {
         this.input = input;
         tokens = new LinkedList<>();
+        reserved = new HashMap<>();
+        reserved.put(Word.FALSE.value, Word.FALSE);
+        reserved.put(Word.TRUE.value, Word.TRUE);
+        reserved.put(Word.NULL.value, Word.NULL);
+
     }
 
     public List<Token> tokenize() {
@@ -68,8 +72,10 @@ public class Lexer {
                 tryToReadString();
                 continue;
             }
-
-            //TODO Try to read value literals
+            if(Character.isLetter(charAt)){
+                tryToReadWord();
+                continue;
+            }
 
             pos++;
         }
@@ -81,9 +87,23 @@ public class Lexer {
         do {
             b.append(charAt);
             charAt = input.charAt(++pos);
-        } while (charAt != '"' && (Character.isSpaceChar(charAt) || Character.isLetterOrDigit(charAt)));
+        } while (charAt != '"');
         String s = b.toString();
         tokens.add(new Text(s));
+        pos++;
+    }
+
+    private void tryToReadWord(){
+        StringBuffer b = new StringBuffer();
+        char charAt = input.charAt(pos);
+        do {
+            b.append(charAt);
+            charAt = input.charAt(++pos);
+        } while (Character.isLetter(charAt));
+        String s = b.toString();
+        if(reserved.containsKey(s)){
+            tokens.add(reserved.get(s));
+        }
         pos++;
     }
 
