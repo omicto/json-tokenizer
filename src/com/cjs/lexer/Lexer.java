@@ -85,6 +85,7 @@ public class Lexer {
         StringBuffer b = new StringBuffer();
         char charAt = input.charAt(++pos);
         do {
+            if(pos + 1 == input.length()) return; //FIXME weird workaround
             b.append(charAt);
             charAt = input.charAt(++pos);
         } while (charAt != '"');
