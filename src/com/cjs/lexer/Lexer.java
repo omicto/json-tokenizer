@@ -29,10 +29,12 @@ public class Lexer {
         char charAt;
         while (pos < input.length()) {
             charAt = input.charAt(pos);
+            // Ignore empty space
             if (Character.isSpaceChar(charAt)) {
                 pos++;
                 continue;
             }
+            // Structural characters
             switch (charAt) {
                 case '{':
                     tokens.add(Structural.OPEN_OBJECT);
@@ -59,7 +61,9 @@ public class Lexer {
                     pos++;
                     continue;
             }
+            // Just in case something coming up next is a number
             int isNegative = 1;
+            // JSON should only see dashes when they're before a negative number
             if (charAt == '-') {
                 isNegative = -1;
                 charAt = input.charAt(++pos);
@@ -113,7 +117,8 @@ public class Lexer {
         char charAt = input.charAt(pos);
         do {
             v = 10 * v + Character.digit(charAt, 10);
-            charAt = input.charAt(++pos);
+            if(++pos == input.length()) break; //FIXME weird workaround
+            charAt = input.charAt(pos);
         } while (Character.isDigit(charAt));
         if (charAt != '.') {
             tokens.add(new Num(v * isNegative));

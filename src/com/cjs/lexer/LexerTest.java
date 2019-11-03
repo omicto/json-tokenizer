@@ -14,10 +14,10 @@ class LexerTest {
                 "  \"arreglo\" : [\"tacos\", \"m a l\", \"escr1t0\"],\n" +
                 "  \"obj\": \n" +
                 "  {\n" +
-                "    \"uno\": 1, \"dos\" : 2.002, \"true\" : true\n" +
+                "    \"uno\": 1, \"dos\" : -2.002, \"true\" : true\n" +
                 "  }\n" +
                 "}");
-//        Lexer lex = new Lexer("\"Hola]");
+//        Lexer lex = new Lexer("-1");
         List<Token> tokens = lex.tokenize();
         tokens.forEach(System.out::println);
     }
