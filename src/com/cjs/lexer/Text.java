@@ -1,15 +1,13 @@
 package com.cjs.lexer;
 
-public class Text extends Token {
-    public final String str;
+public class Text extends Token<String> {
 
     public Text(String str) {
-        super(Tag.STRING);
-        this.str = str;
+        super(Tag.STRING, str);
     }
 
     @Override
-    protected String getTokenValue() {
-        return "\"" + str + "\"";
+    public String toString() {
+        return tag.name() + ": \"" + value + "\"";
     }
 }

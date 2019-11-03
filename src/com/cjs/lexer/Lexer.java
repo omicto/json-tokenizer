@@ -1,96 +1,114 @@
 package com.cjs.lexer;
 
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Lexer {
-    public static int line = 1;
-//    public static int currentChar = 0;
-    char peek = ' ';
+    private final String input;
+    private final List<Token> tokens;
+    private final List<Character> structural = Arrays.asList(Structural.CHARACTERS());
+    private int pos = 0;
 
-    void readch() throws IOException {
-        peek = (char)System.in.read();
-//        currentChar++;
+    public Lexer(String input) {
+        this.input = input;
+        tokens = new LinkedList<>();
     }
 
-    boolean readch(char c) throws IOException{
-        readch();
-        if(peek != c) {
-            return false;
-        }
-        peek = ' ';
-        return true;
+    public List<Token> tokenize() {
+        if (!tokens.isEmpty()) return tokens;
+        scan();
+        return tokens;
     }
 
-    public Token scan() throws IOException{
-//        System.in.skip(currentChar);
-        while (true) {
-            if(peek == ' ' || peek == '\t'){
-                readch();
+    private void scan() {
+        char charAt;
+        while (pos < input.length()) {
+            charAt = input.charAt(pos);
+            if (Character.isSpaceChar(charAt)) {
+                pos++;
                 continue;
-            }else if(peek == '\n'){
-                readch();
-                line++;
-            }else{
-                break;
             }
+            switch (charAt) {
+                case '{':
+                    tokens.add(Structural.OPEN_OBJECT);
+                    pos++;
+                    continue;
+                case '}':
+                    tokens.add(Structural.CLOSE_OBJECT);
+                    pos++;
+                    continue;
+                case '[':
+                    tokens.add(Structural.OPEN_ARRAY);
+                    pos++;
+                    continue;
+                case ']':
+                    tokens.add(Structural.CLOSE_ARRAY);
+                    pos++;
+                    continue;
+                case ',':
+                    tokens.add(Structural.VALUE_SEPARATOR);
+                    pos++;
+                    continue;
+                case ':':
+                    tokens.add(Structural.NAME_SEPARATOR);
+                    pos++;
+                    continue;
+            }
+            int isNegative = 1;
+            if (charAt == '-') {
+                isNegative = -1;
+                charAt = input.charAt(++pos);
+            }
+            if (Character.isDigit(charAt)) {
+                tryToReadNumber(isNegative);
+                continue;
+            }
+            if (charAt == '"') {
+                tryToReadString();
+                continue;
+            }
+
+            //TODO Try to read value literals
+
+            pos++;
         }
-        switch (peek) {
-            case '{':
-                peek = ' ';
-                return new Token(Tag.OPEN_OBJECT);
-            case '}':
-                peek = ' ';
-                return new Token(Tag.CLOSE_OBJECT);
-            case '[':
-                peek = ' ';
-                return new Token(Tag.OPEN_ARRAY);
-            case ']':
-                peek = ' ';
-                return new Token(Tag.CLOSE_ARRAY);
-            case ',':
-                peek = ' ';
-                return new Token(Tag.VALUE_SEPARATOR);
-            case ':':
-                peek = ' ';
-                return new Token(Tag.NAME_SEPARATOR);
-            case '-':
-                readch();
-                if (Character.isDigit(peek)) {
-                    return new Num(-1 * readNumber());
-                }
-                break;
-            case '"':
-                StringBuffer b = new StringBuffer();
-                readch();
-                do{
-                    b.append(peek);
-                    readch();
-                }while (peek == ' ' || (peek != '"') && Character.isLetterOrDigit(peek));
-                String s = b.toString();
-                return new Text(s);
-        }
-        if(Character.isDigit(peek)){
-            return new Num(readNumber());
-        }
-        peek = ' ';
-        return new Token(Tag.ERR);
     }
 
-    private double readNumber() throws IOException {
-        int v = 0;
+    private void tryToReadString() {
+        StringBuffer b = new StringBuffer();
+        char charAt = input.charAt(++pos);
         do {
-            v = 10*v + Character.digit(peek, 10);
-            readch();
-        }while (Character.isDigit(peek));
-        if(peek != '.') return v;
+            b.append(charAt);
+            charAt = input.charAt(++pos);
+        } while (charAt != '"' && (Character.isSpaceChar(charAt) || Character.isLetterOrDigit(charAt)));
+        String s = b.toString();
+        tokens.add(new Text(s));
+        pos++;
+    }
+
+    private void tryToReadNumber(int isNegative) {
+        int v = 0;
+        char charAt = input.charAt(pos);
+        do {
+            v = 10 * v + Character.digit(charAt, 10);
+            charAt = input.charAt(++pos);
+        } while (Character.isDigit(charAt));
+        if (charAt != '.') {
+            tokens.add(new Num(v * isNegative));
+            return;
+        }
         double x = v;
         float d = 10;
         while (true) {
-            readch();
-            if(!Character.isDigit(peek)) break;
-            x = x + Character.digit(peek, 10) / d;
+            pos++;
+            charAt = input.charAt(pos);
+            if (!Character.isDigit(charAt)) break;
+            x = x + Character.digit(charAt, 10) / d;
             d *= 10;
         }
-        return x;
+        tokens.add(new Num(x * isNegative));
     }
+
 }
+
